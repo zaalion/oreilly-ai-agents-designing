@@ -1,0 +1,36 @@
+#pip install azure-ai-projects
+#pip install azure-ai-agents
+#pip install azure-identity
+
+
+from azure.ai.projects import AIProjectClient
+from azure.identity import DefaultAzureCredential
+from azure.ai.agents.models import ListSortOrder
+
+project = AIProjectClient(
+    credential=DefaultAzureCredential(),
+    endpoint="[YOUR ENDPOINT - GET FROM FOUNDRY PORTAL]")
+
+agent = project.agents.get_agent("AGENT ID - GET FROM FOUNDRY PORTAL")
+
+thread = project.agents.threads.create()
+print(f"Created thread, ID: {thread.id}")
+
+message = project.agents.messages.create(
+    thread_id=thread.id,
+    role="user",
+    content="Hi Agent!"
+)
+
+run = project.agents.runs.create_and_process(
+    thread_id=thread.id,
+    agent_id=agent.id)
+
+if run.status == "failed":
+    print(f"Run failed: {run.last_error}")
+else:
+    messages = project.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+
+    for message in messages:
+        if message.text_messages:
+            print(f"{message.role}: {message.text_messages[-1].text.value}")
