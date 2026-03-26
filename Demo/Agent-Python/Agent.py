@@ -1,31 +1,38 @@
 from azure.ai.projects import AIProjectClient
+from azure.ai.projects.models import PromptAgentDefinition
 from azure.identity import DefaultAzureCredential
-from azure.ai.agents.models import ListSortOrder
 
 project = AIProjectClient(
+    endpoint="https://dp100psdemo-foundry.services.ai.azure.com/api/projects/proj-default",
     credential=DefaultAzureCredential(),
-    endpoint="https://dp100psdemo-foundry.services.ai.azure.com/api/projects/proj-default")
-
-agent = project.agents.get_agent("asst_UaJ0I3PsDE6WD57OgwbgydWC")
-
-thread = project.agents.threads.create()
-print(f"Created thread, ID: {thread.id}")
-
-message = project.agents.messages.create(
-    thread_id=thread.id,
-    role="user",
-    content="Hi Agent196"
 )
 
-run = project.agents.runs.create_and_process(
-    thread_id=thread.id,
-    agent_id=agent.id)
+openai = project.get_openai_client()
 
-if run.status == "failed":
-    print(f"Run failed: {run.last_error}")
-else:
-    messages = project.agents.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+# Option A: create or update an agent version, then use its returned name
+agent = project.agents.create_version(
+    agent_name="agent196",
+    definition=PromptAgentDefinition(
+        model="gpt-4o-mini",
+        instructions="You are a helpful assistant."
+    )
+)
 
-    for message in messages:
-        if message.text_messages:
-            print(f"{message.role}: {message.text_messages[-1].text.value}")
+print(f"Agent created/found: name={agent.name}, version={agent.version}")
+
+conversation = openai.conversations.create()
+
+response = openai.responses.create(
+    conversation=conversation.id,
+    input="Hi Agent196",
+    extra_body={
+        "agent_reference": {
+            "name": agent.name,
+            "type": "agent_reference",
+            # optionally include version if needed:
+            # "version": agent.version
+        }
+    }
+)
+
+print(response.output_text)
