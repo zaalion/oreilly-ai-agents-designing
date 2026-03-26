@@ -1,17 +1,12 @@
-#pip install azure-ai-projects
-#pip install azure-ai-agents
-#pip install azure-identity
-
-
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 from azure.ai.agents.models import ListSortOrder
 
 project = AIProjectClient(
     credential=DefaultAzureCredential(),
-    endpoint="[YOUR ENDPOINT - GET FROM FOUNDRY PORTAL]")
+    endpoint="https://dp100psdemo-foundry.services.ai.azure.com/api/projects/proj-default")
 
-agent = project.agents.get_agent("AGENT ID - GET FROM FOUNDRY PORTAL")
+agent = project.agents.get_agent("asst_UaJ0I3PsDE6WD57OgwbgydWC")
 
 thread = project.agents.threads.create()
 print(f"Created thread, ID: {thread.id}")
@@ -19,7 +14,7 @@ print(f"Created thread, ID: {thread.id}")
 message = project.agents.messages.create(
     thread_id=thread.id,
     role="user",
-    content="Hi Agent!"
+    content="Hi Agent196"
 )
 
 run = project.agents.runs.create_and_process(
