@@ -1,0 +1,92 @@
+{
+  "$schema": "https://github.com/Azure/data-api-builder/releases/download/v1.7.93/dab.draft.schema.json",
+  "data-source": {
+    "database-type": "mssql",
+    "connection-string": "Server=tcp:agentic-or-sqlsrv.database.windows.net,1433;Database=agentic-or-sqldb;User ID=mcp_user;Password=KluAdmin$#%1254;Encrypt=true;TrustServerCertificate=false;Connection Timeout=30;",
+    "options": {
+      "set-session-context": false
+    }
+  },
+  "runtime": {
+    "rest": {
+      "enabled": true,
+      "path": "/api",
+      "request-body-strict": true
+    },
+    "graphql": {
+      "enabled": true,
+      "path": "/graphql",
+      "allow-introspection": true
+    },
+    "mcp": {
+      "enabled": true,
+      "path": "/mcp"
+    },
+    "host": {
+      "cors": {
+        "origins": [],
+        "allow-credentials": false
+      },
+      "authentication": {
+        "provider": "AppService"
+      },
+      "mode": "production"
+    }
+  },
+  "entities": {
+    "Products": {
+      "description": "Product catalog with product names, categories, prices, and inventory levels.",
+      "source": {
+        "object": "dbo.Products",
+        "type": "table"
+      },
+      "fields": [
+        {
+          "name": "ProductID",
+          "description": "Unique product identifier",
+          "primary-key": true
+        },
+        {
+          "name": "ProductName",
+          "description": "Name of the product",
+          "primary-key": false
+        },
+        {
+          "name": "Category",
+          "description": "Product category",
+          "primary-key": false
+        },
+        {
+          "name": "UnitPrice",
+          "description": "Retail price per unit",
+          "primary-key": false
+        },
+        {
+          "name": "UnitsInStock",
+          "description": "Current inventory count",
+          "primary-key": false
+        }
+      ],
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "Products",
+          "plural": "Products"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
