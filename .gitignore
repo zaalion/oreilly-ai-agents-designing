@@ -18,6 +18,7 @@
 *.avi
 *.svg
 *.rsuser
+*.secret
 *.suo
 *.user
 *.userosscache
