@@ -1,38 +1,25 @@
-from azure.ai.projects import AIProjectClient
-from azure.ai.projects.models import PromptAgentDefinition
-from azure.identity import DefaultAzureCredential
+# Before running the sample:
+#    pip install azure-ai-projects>=2.1.0
 
-project = AIProjectClient(
-    endpoint="https://dp100psdemo-foundry.services.ai.azure.com/api/projects/proj-default",
+from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+
+endpoint = "https://agentic-or-foundry.services.ai.azure.com/api/projects/proj-default"
+
+project_client = AIProjectClient(
+    endpoint=endpoint,
     credential=DefaultAzureCredential(),
 )
 
-openai = project.get_openai_client()
+my_agent = "agent01"
+my_version = "3"
 
-# Option A: create or update an agent version, then use its returned name
-agent = project.agents.create_version(
-    agent_name="agent196",
-    definition=PromptAgentDefinition(
-        model="gpt-4o-mini",
-        instructions="You are a helpful assistant."
-    )
+openai_client = project_client.get_openai_client()
+
+# Reference the agent to get a response
+response = openai_client.responses.create(
+    input=[{"role": "user", "content": "Tell me a joke."}],
+    extra_body={"agent_reference": {"name": my_agent, "version": my_version, "type": "agent_reference"}},
 )
 
-print(f"Agent created/found: name={agent.name}, version={agent.version}")
-
-conversation = openai.conversations.create()
-
-response = openai.responses.create(
-    conversation=conversation.id,
-    input="Hi Agent196",
-    extra_body={
-        "agent_reference": {
-            "name": agent.name,
-            "type": "agent_reference",
-            # optionally include version if needed:
-            # "version": agent.version
-        }
-    }
-)
-
-print(response.output_text)
+print(f"Response output: {response.output_text}")

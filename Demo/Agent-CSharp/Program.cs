@@ -1,63 +1,25 @@
-﻿using Azure;
-using Azure.Identity;
+﻿// dotnet add package Azure.AI.Projects --version 2.0.0-beta.2
 using Azure.AI.Projects;
-using Azure.AI.Agents.Persistent;
+using Azure.AI.Projects.Agents;
+using Azure.AI.Extensions.OpenAI;
+using Azure.Identity;
+using OpenAI.Responses;
 
-async Task RunAgentConversation()
-{
-    var endpoint = new Uri("https://dp100psdemo-foundry.services.ai.azure.com/api/projects/proj-default");
-    AIProjectClient projectClient = new(endpoint, new DefaultAzureCredential());
+#pragma warning disable OPENAI001
 
-    PersistentAgentsClient agentsClient = projectClient.GetPersistentAgentsClient();
+const string endpoint = "https://agentic-or-foundry.services.ai.azure.com/api/projects/proj-default";
+const string agentName = "agent01";
+const string agentVersion = "3";
 
-    PersistentAgent agent = agentsClient.Administration.GetAgent("asst_UaJ0I3PsDE6WD57OgwbgydWC");
-    
-    PersistentAgentThread thread = agentsClient.Threads.CreateThread();
-    Console.WriteLine($"Created thread, ID: {thread.Id}");
-    
-    PersistentThreadMessage messageResponse = agentsClient.Messages.CreateMessage(
-        thread.Id,
-        MessageRole.User,
-        "Hi Agent196");
+// Connect to your project using the endpoint from your project page
+// The AzureCliCredential will use your logged-in Azure CLI identity, make sure to run `az login` first
+AIProjectClient projectClient = new(endpoint: new Uri(endpoint), tokenProvider: new DefaultAzureCredential());
 
-    ThreadRun run = agentsClient.Runs.CreateRun(
-        thread.Id,
-        agent.Id);
+AgentReference agentReference = new(name: agentName, version: agentVersion);
+ProjectResponsesClient responseClient = projectClient.OpenAI.GetProjectResponsesClientForAgent(agentReference);
+// Use the agent to generate a response
+ResponseResult response = responseClient.CreateResponse(
+    "Hello! Tell me a joke."
+);
 
-    // Poll until the run reaches a terminal status
-    do
-    {
-        await Task.Delay(TimeSpan.FromMilliseconds(500));
-        run = agentsClient.Runs.GetRun(thread.Id, run.Id);
-    }
-    while (run.Status == RunStatus.Queued
-        || run.Status == RunStatus.InProgress);
-    if (run.Status != RunStatus.Completed)
-    {
-        throw new InvalidOperationException($"Run failed or was canceled: {run.LastError?.Message}");
-    }
-
-    Pageable<PersistentThreadMessage> messages = agentsClient.Messages.GetMessages(
-        thread.Id, order: ListSortOrder.Ascending);
-
-    // Display messages
-    foreach (PersistentThreadMessage threadMessage in messages)
-    {
-        Console.Write($"{threadMessage.CreatedAt:yyyy-MM-dd HH:mm:ss} - {threadMessage.Role,10}: ");
-        foreach (MessageContent contentItem in threadMessage.ContentItems)
-        {
-            if (contentItem is MessageTextContent textItem)
-            {
-                Console.Write(textItem.Text);
-            }
-            else if (contentItem is MessageImageFileContent imageFileItem)
-            {
-                Console.Write($"<image from ID: {imageFileItem.FileId}");
-            }
-            Console.WriteLine();
-        }
-    }
-}
-
-// Main execution
-await RunAgentConversation();
+Console.WriteLine(response.GetOutputText());
